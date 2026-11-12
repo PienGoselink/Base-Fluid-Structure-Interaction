@@ -1,0 +1,52 @@
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+
+
+# von Karman constant
+kappa = 0.41
+
+# Logarithmic velocity profile
+def log_profile(z, u_star, z0):
+    return (u_star / kappa) * np.log(z / z0)
+
+# Initial guesses
+initial_guess = [0.1, 0.001]
+
+# Fit the experimental data
+popt, pcov = curve_fit(
+    log_profile,
+    z,
+    u,
+    p0=initial_guess,
+    bounds=([0, 1e-10], [np.inf, np.min(z)])
+)
+
+u_star, z0 = popt
+
+# Predictions
+u_fit = log_profile(z, u_star, z0)
+
+# R-squared
+ss_res = np.sum((u - u_fit)**2)
+ss_tot = np.sum((u - np.mean(u))**2)
+r_squared = 1 - ss_res / ss_tot
+
+# Print results
+print(f"Friction velocity u* = {u_star:.5f} m/s")
+print(f"Roughness length z0 = {z0:.6f} m")
+print(f"R² = {r_squared:.5f}")
+
+# Plot
+z_plot = np.linspace(np.min(z), np.max(z), 200)
+
+plt.scatter(z, u, color='blue', label='Experimental data')
+plt.plot(z_plot, log_profile(z_plot, *popt),
+         color='red', label='Logarithmic fit')
+
+plt.xlabel('Height z (m)')
+plt.ylabel('Mean velocity u (m/s)')
+plt.legend()
+plt.grid()
+plt.show()

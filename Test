@@ -1,10 +1,11 @@
 
-
+import scipy.stats  
 from scipy.stats import linregress as lingress
 from pathlib import Path
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 bestanden = list(Path(".").glob("Z_*.dat"))
 if not bestanden:
