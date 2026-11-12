@@ -1,0 +1,66 @@
+
+
+from scipy.stats import linregress as lingress
+from pathlib import Path
+import re
+import numpy as np
+import matplotlib.pyplot as plt
+
+bestanden = list(Path(".").glob("Z_*.dat"))
+if not bestanden:
+    raise FileNotFoundError("Geen bestanden gevonden die beginnen met Z_")
+
+resultaten = []
+
+for bestand in bestanden:
+    match = re.fullmatch(r"Z_(\d+(?:\.\d+)?)", bestand.stem)
+    if match is None:
+        raise ValueError(f"Kan geen getal uit de bestandsnaam halen: {bestand.name}")
+
+    z_waarde = float(match.group(1))
+    data = np.loadtxt(bestand)
+
+    # Gemiddelde van de tweede kolom (streamwise velocity)
+    gemiddelde = np.mean(data[:, 1])
+    resultaten.append((z_waarde, gemiddelde))
+
+# Nieuwe dataset: kolom 1 = waarde uit de bestandsnaam,
+# kolom 2 = gemiddelde van de gekozen datakolom
+gemiddelde_data = np.array(sorted(resultaten))
+
+print("Z-waarde | Gemiddelde streamwise velocity")
+print(gemiddelde_data)
+
+# Optioneel: sla de nieuwe dataset op
+np.savetxt(
+    "gemiddelden.dat",
+    gemiddelde_data,
+    header="Z_waarde gemiddelde_streamwise_velocity"
+)
+
+plt.plot(gemiddelde_data[:, 1], gemiddelde_data[:, 0], "o-")
+plt.xlabel("Waarde uit bestandsnaam")
+plt.ylabel("Gemiddelde streamwise velocity")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+
+x = np.log(gemiddelde_data[:, 0]) # Logaritme van de Z-waarden
+y = gemiddelde_data[:, 1] # Gemiddelde streamwise velocity
+
+
+result = lingress(x, y)
+a = result.slope
+b = result.intercept
+
+y2 = a * x + b
+
+# plt.plot(x, y, "o", label="Data")
+plt.plot(x, y2, "r-", label=f"Fit: y = {a:.4f} * log(x) + {b:.4f}")
+plt.xlabel("Log(Z-waarde)") 
+plt.ylabel("Gemiddelde streamwise velocity")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
